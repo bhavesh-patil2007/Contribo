@@ -415,4 +415,68 @@ test('7. Python Proposal PDF Engine', async (t) => {
   });
 });
 
+// ==========================================
+// 8. Proposal Section Live Counter & Threshold Progress
+// ==========================================
+function calculateSectionThreshold(text, minChars) {
+  const charCount = text ? text.length : 0;
+  const trimmed = text ? text.trim() : '';
+  const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
+  const safeMin = Math.max(1, minChars);
+  const percentage = Math.min(100, Math.round((charCount / safeMin) * 100));
+  const isThresholdMet = trimmed.length >= safeMin;
+
+  return {
+    charCount,
+    wordCount,
+    minChars: safeMin,
+    percentage,
+    isThresholdMet,
+    remainingChars: Math.max(0, safeMin - charCount),
+  };
+}
+
+test('8. Proposal Section Live Counter & Threshold Progress', async (t) => {
+  await t.test('accurately calculates character and word count for empty and standard inputs', () => {
+    const emptyResult = calculateSectionThreshold('', 40);
+    assert.equal(emptyResult.charCount, 0);
+    assert.equal(emptyResult.wordCount, 0);
+    assert.equal(emptyResult.percentage, 0);
+    assert.equal(emptyResult.isThresholdMet, false);
+    assert.equal(emptyResult.remainingChars, 40);
+
+    const text = 'Integration of dynamic ECharts-based geospatial visualization modules.';
+    const result = calculateSectionThreshold(text, 40);
+    assert.equal(result.charCount, text.length);
+    assert.equal(result.wordCount, 7);
+  });
+
+  await t.test('flags warning state and accurate remaining character count when below threshold', () => {
+    const shortText = 'Initial summary draft'; // 21 chars
+    const result = calculateSectionThreshold(shortText, 60);
+
+    assert.equal(result.charCount, 21);
+    assert.equal(result.isThresholdMet, false);
+    assert.equal(result.remainingChars, 39);
+    assert.equal(result.percentage, 35);
+  });
+
+  await t.test('smoothly transitions to success state once minChars is reached or exceeded', () => {
+    const metText = 'This section contains more than sixty characters to satisfy the minimum threshold criteria.';
+    const result = calculateSectionThreshold(metText, 60);
+
+    assert.equal(result.isThresholdMet, true);
+    assert.equal(result.remainingChars, 0);
+    assert.equal(result.percentage, 100);
+  });
+
+  await t.test('handles whitespace padding and edge cases without artificially inflating metrics', () => {
+    const whitespaceOnly = '     \n\t   ';
+    const result = calculateSectionThreshold(whitespaceOnly, 40);
+
+    assert.equal(result.wordCount, 0);
+    assert.equal(result.isThresholdMet, false);
+  });
+});
+
 

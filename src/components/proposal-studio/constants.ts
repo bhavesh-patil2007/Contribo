@@ -30,6 +30,39 @@ export interface BuilderSectionDef {
   minChars: number;
 }
 
+export interface SectionThresholdMetrics {
+  charCount: number;
+  wordCount: number;
+  minChars: number;
+  percentage: number;
+  isThresholdMet: boolean;
+  remainingChars: number;
+}
+
+/**
+ * Calculates live character metrics and threshold progress against recommended section length.
+ */
+export function calculateSectionThreshold(
+  text: string,
+  minChars: number
+): SectionThresholdMetrics {
+  const charCount = text ? text.length : 0;
+  const trimmed = text ? text.trim() : '';
+  const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
+  const safeMin = Math.max(1, minChars);
+  const percentage = Math.min(100, Math.round((charCount / safeMin) * 100));
+  const isThresholdMet = trimmed.length >= safeMin;
+
+  return {
+    charCount,
+    wordCount,
+    minChars: safeMin,
+    percentage,
+    isThresholdMet,
+    remainingChars: Math.max(0, safeMin - charCount),
+  };
+}
+
 export const BUILDER_SECTIONS: BuilderSectionDef[] = [
   {
     id: 'summary',

@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
         safeLogError('Failed to spawn Python PDF process:', err);
         resolve(
           apiError(
-            `Python PDF engine failed to start: ${err.message}`,
-            500
+            `Python PDF engine unavailable (${err.message}). Use client-side Print to PDF or Markdown export.`,
+            503
           )
         );
       });
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
           safeLogError('Python PDF engine returned non-zero code:', { code, stderrData });
           resolve(
             apiError(
-              stderrData || 'PDF generation failed in Python engine',
+              stderrData || 'PDF generation failed in Python engine. Use client-side Print to PDF or Markdown export.',
               500
             )
           );

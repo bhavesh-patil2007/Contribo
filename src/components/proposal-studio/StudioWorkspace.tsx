@@ -70,7 +70,7 @@ export function StudioWorkspace() {
   return (
     <div className="min-h-screen w-full bg-noise flex flex-col">
       {/* Sticky Studio Top Navigation Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-hairline bg-surface/95 backdrop-blur-md shadow-xs">
+      <header className="print:hidden sticky top-0 z-40 w-full border-b border-hairline bg-surface/95 backdrop-blur-md shadow-xs">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
           <div className="flex h-16 sm:h-18 items-center justify-between gap-4">
             {/* Left: Active Draft Selector + New Draft Button */}
