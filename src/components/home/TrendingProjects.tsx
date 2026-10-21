@@ -326,7 +326,11 @@ export function TrendingProjects({
       {projects.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-hairline bg-surface/50 p-12 text-center">
           <Compass size={24} className="mx-auto text-muted mb-2 opacity-50" />
-          <p className="text-primary font-medium text-sm">No curated projects found</p>
+          <p className="text-primary font-medium text-sm">
+            {domain === 'all'
+              ? 'No curated projects found'
+              : 'No projects match the selected domain yet'}
+          </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-hairline bg-surface/50 p-10 text-center">

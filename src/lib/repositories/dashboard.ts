@@ -2,6 +2,8 @@ import { ObjectId } from 'mongodb';
 import type { Application, ApplicationStatus, SavedItem, SavedItemType } from '@/../types';
 import { COLLECTIONS, getCollection } from '@/lib/db';
 import { serializeDocs, serializeDoc, toObjectId } from '@/lib/serialize';
+import { getProgramById, getProgramBySlug } from '@/lib/repositories/programs';
+import { createApplicationMilestones, normalizeCompletedMilestoneIds } from '@/lib/application-milestones.mjs';
 
 function userIdFilter(userId: string) {
   const oid = toObjectId(userId);
@@ -323,6 +325,7 @@ export async function updateApplication(
     notes?: string;
     deadline?: string | null;
     projectTitle?: string;
+    completedMilestoneIds?: string[];
   }
 ) {
   const itemOid = toObjectId(applicationId);
@@ -350,6 +353,55 @@ export async function updateApplication(
   }
 
   const collection = await getCollection<Application>(COLLECTIONS.applications);
+
+  if (updates.completedMilestoneIds !== undefined) {
+    const existing = await collection.findOne({
+      _id: itemOid,
+      userId: userIdFilter(userId),
+    } as never);
+
+    if (!existing) return null;
+
+    const programById =
+      existing.programId != null
+        ? await getProgramById(String(existing.programId))
+        : null;
+    const program =
+      programById ||
+      (typeof existing.programSlug === 'string'
+        ? await getProgramBySlug(existing.programSlug)
+        : null);
+
+    const programSlug =
+      typeof program?.slug === 'string'
+        ? program.slug
+        : typeof existing.programSlug === 'string'
+          ? existing.programSlug
+          : 'program';
+
+    const applicationSteps = Array.isArray(program?.applicationSteps)
+      ? program.applicationSteps.filter(
+          (step): step is string => typeof step === 'string'
+        )
+      : [];
+
+    const validMilestoneIds = createApplicationMilestones(
+      programSlug,
+      applicationSteps
+    ).map((milestone) => milestone.id);
+
+    const completedMilestoneIds = normalizeCompletedMilestoneIds(
+      updates.completedMilestoneIds,
+      validMilestoneIds
+    );
+
+    if (completedMilestoneIds === null) {
+      throw new Error('Invalid completed milestone IDs');
+    }
+
+    $set.completedMilestoneIds = completedMilestoneIds;
+  }
+
   const result = await collection.findOneAndUpdate(
     { _id: itemOid, userId: userIdFilter(userId) } as never,
     { $set },

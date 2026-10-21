@@ -48,6 +48,8 @@ export type DashboardApp = {
   status: ApplicationStatus | string;
   deadline?: string | Date | null;
   notes?: string;
+  applicationSteps?: string[];
+  completedMilestoneIds?: string[];
 };
 
 export type DashboardSaved = {
